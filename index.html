@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Hệ thống kiểm tra trực tuyến</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -237,19 +236,25 @@
 
 <script>
 // ============================================================
-//  SUPABASE CONFIG
+//  SUPABASE CONFIG — điền thông tin của bạn vào đây
 // ============================================================
 const SUPABASE_URL      = 'https://YOUR_PROJECT.supabase.co';
 const SUPABASE_ANON_KEY = 'YOUR_ANON_KEY';
 // ============================================================
 
-let sb = null;
-function initSupabase() {
-  try { if (window.supabase) sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); }
-  catch(e) { console.warn('Supabase init failed:', e); }
+// Gọi Supabase REST API trực tiếp — không cần SDK/CDN
+async function sbQuery(malop) {
+  const url = `${SUPABASE_URL}/rest/v1/lop_hoc?ma_lop=eq.${encodeURIComponent(malop)}&limit=1`;
+  const res = await fetch(url, {
+    headers: {
+      'apikey': SUPABASE_ANON_KEY,
+      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+    }
+  });
+  if (!res.ok) throw new Error('Lỗi kết nối hệ thống: HTTP ' + res.status);
+  const data = await res.json();
+  return data[0] || null;
 }
-if (window.supabase) initSupabase();
-document.addEventListener('DOMContentLoaded', () => { if (!sb && window.supabase) initSupabase(); });
 
 document.getElementById('input-malop').addEventListener('keydown', e => {
   if (e.key === 'Enter') document.getElementById('input-stt').focus();
@@ -275,18 +280,12 @@ async function doLogin() {
   err.classList.remove('show');
 
   try {
-    if (!sb) { initSupabase(); }
-    if (!sb) throw new Error('Không thể kết nối hệ thống. Vui lòng kiểm tra cấu hình Supabase.');
-    const { data, error } = await sb
-      .from('lop_hoc').select('*')
-      .eq('ma_lop', malop.toUpperCase()).single();
-
-    if (error || !data) throw new Error('Mã bài không tồn tại.');
+    const data = await sbQuery(malop.toUpperCase());
+    if (!data) throw new Error('Mã bài không tồn tại.');
 
     const user = data.users.find(u => String(u.stt) === String(stt));
     if (!user) throw new Error('Số thứ tự không tồn tại trong mã bài này.');
 
-    // Lưu dữ liệu tạm rồi chuyển sang greeting.html
     sessionStorage.setItem('greeting_data', JSON.stringify({ cls: data, user }));
 
     const ov = document.getElementById('overlay');
