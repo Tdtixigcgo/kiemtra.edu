@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin — 8/3 Creator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Be Vietnam Pro', sans-serif;
+      background: #0f0a14;
+      color: white;
+      min-height: 100vh;
+    }
+
+    /* ── NAV ── */
+    .ad-nav {
+      background: rgba(255,255,255,0.03);
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      padding: 14px 28px;
+      display: flex; align-items: center; gap: 12px;
+    }
+
+    .ad-nav-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 17px; color: #fbcfe8; font-style: italic;
+    }
+
+    .ad-nav-tag {
+      font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+      background: rgba(236,72,153,0.18); color: #ec4899;
+      border: 1px solid rgba(236,72,153,0.28); padding: 3px 9px; border-radius: 100px;
+    }
+
+    .ad-nav-back {
+      margin-left: auto; font-size: 13px; color: rgba(255,255,255,0.3);
+      text-decoration: none; transition: color 0.2s;
+    }
+
+    .ad-nav-back:hover { color: rgba(255,255,255,0.6); }
+
+    /* ── MAIN ── */
+    .ad-main { max-width: 780px; margin: 0 auto; padding: 40px 24px 80px; }
+
+    .ad-h1 { font-size: 26px; font-weight: 700; color: white; margin-bottom: 6px; }
+
+    .ad-sub { font-size: 14px; color: rgba(255,255,255,0.38); margin-bottom: 34px; line-height: 1.7; }
+
+    .ad-notice {
+      background: rgba(236,72,153,0.09); border: 1px solid rgba(236,72,153,0.22);
+      border-radius: 10px; padding: 14px 18px;
+      font-size: 13px; color: #fbcfe8; margin-bottom: 28px; line-height: 1.7;
+    }
+
+    .ad-notice code { background: rgba(255,255,255,0.08); padding: 1px 6px; border-radius: 4px; font-size: 12px; }
+
+    /* ── SECTION LABEL ── */
+    .sec-label {
+      font-size: 11px; font-weight: 700; letter-spacing: 1.3px;
+      text-transform: uppercase; color: #fbcfe8; margin-bottom: 14px;
+      display: flex; align-items: center; gap: 10px;
+    }
+
+    .sec-label::after { content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.07); }
+
+    /* ── FIELDS ── */
+    .af { margin-bottom: 16px; }
+
+    .af label { display: block; font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.5); margin-bottom: 7px; }
+
+    .af input, .af textarea {
+      width: 100%; padding: 11px 14px;
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 8px; color: white; font-family: inherit; font-size: 14px;
+      outline: none; transition: all 0.2s; resize: vertical;
+    }
+
+    .af input:focus, .af textarea:focus {
+      border-color: #ec4899; background: rgba(236,72,153,0.05);
+      box-shadow: 0 0 0 3px rgba(236,72,153,0.1);
+    }
+
+    .af input::placeholder, .af textarea::placeholder { color: rgba(255,255,255,0.18); }
+
+    /* ── PARSE BTN ── */
+    .parse-btn {
+      padding: 9px 18px;
+      background: rgba(251,207,232,0.07); border: 1px solid rgba(251,207,232,0.18);
+      border-radius: 7px; color: #fbcfe8; font-size: 13px; font-weight: 500;
+      font-family: inherit; cursor: pointer; transition: background 0.2s;
+    }
+
+    .parse-btn:hover { background: rgba(251,207,232,0.14); }
+
+    /* ── GUEST ROWS ── */
+    .guest-grid { margin-top: 16px; }
+
+    .g-row {
+      background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.065);
+      border-radius: 11px; padding: 16px 18px; margin-bottom: 10px;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    }
+
+    .g-row-head {
+      grid-column: 1/-1; display: flex; align-items: center; gap: 8px; margin-bottom: 2px;
+    }
+
+    .g-stt {
+      background: #ec4899; color: white; width: 20px; height: 20px;
+      border-radius: 5px; font-size: 10px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .g-row-name { font-size: 13px; color: rgba(255,255,255,0.6); font-weight: 500; }
+
+    .g-row input {
+      padding: 9px 12px; background: rgba(255,255,255,0.035);
+      border: 1px solid rgba(255,255,255,0.07); border-radius: 7px;
+      color: white; font-family: inherit; font-size: 13px;
+      outline: none; transition: all 0.2s;
+    }
+
+    .g-row textarea {
+      grid-column: 1/-1; padding: 9px 12px;
+      background: rgba(255,255,255,0.035); border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 7px; color: white; font-family: inherit; font-size: 13px;
+      outline: none; transition: all 0.2s; resize: vertical; min-height: 75px;
+    }
+
+    .g-row input:focus, .g-row textarea:focus {
+      border-color: #ec4899; box-shadow: 0 0 0 2px rgba(236,72,153,0.1);
+    }
+
+    .g-row input::placeholder, .g-row textarea::placeholder { color: rgba(255,255,255,0.17); }
+
+    /* ── SAVE BTN ── */
+    .save-btn {
+      width: 100%; padding: 15px;
+      background: linear-gradient(135deg, #ec4899, #be185d);
+      color: white; border: none; border-radius: 12px;
+      font-size: 15px; font-weight: 700; font-family: inherit;
+      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+      box-shadow: 0 4px 20px rgba(236,72,153,0.32); margin-top: 10px;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .save-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(236,72,153,0.42); }
+
+    /* ── RESULT ── */
+    .res-box {
+      margin-top: 22px; background: rgba(16,185,129,0.07);
+      border: 1px solid rgba(16,185,129,0.22); border-radius: 12px;
+      padding: 22px; display: none;
+    }
+
+    .res-box.show { display: block; }
+
+    .res-title {
+      font-size: 11px; font-weight: 700; letter-spacing: 1px;
+      text-transform: uppercase; color: #6ee7b7; margin-bottom: 12px;
+    }
+
+    .res-code {
+      font-size: 30px; font-weight: 700; color: white; letter-spacing: 7px;
+      font-family: 'Courier New', monospace;
+      background: rgba(255,255,255,0.05); border-radius: 8px;
+      padding: 14px; text-align: center; margin-bottom: 8px;
+    }
+
+    .res-note { font-size: 13px; color: rgba(255,255,255,0.38); text-align: center; margin-bottom: 12px; }
+
+    .copy-btn {
+      display: block; margin: 0 auto; padding: 9px 22px;
+      background: rgba(110,231,183,0.1); border: 1px solid rgba(110,231,183,0.28);
+      border-radius: 7px; color: #6ee7b7; font-size: 13px; font-weight: 500;
+      font-family: inherit; cursor: pointer; transition: background 0.2s;
+    }
+
+    .copy-btn:hover { background: rgba(110,231,183,0.18); }
+
+    @media (max-width: 480px) { .g-row { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+
+<nav class="ad-nav">
+  <span class="ad-nav-title">8/3 Creator</span>
+  <span class="ad-nav-tag">ADMIN</span>
+  <a class="ad-nav-back" href="../index.html">← Về trang học tập</a>
+</nav>
+
+<div class="ad-main">
+  <h1 class="ad-h1">Tạo trang chúc mừng 8/3 🌸</h1>
+  <p class="ad-sub">Điền thông tin bên dưới, hệ thống sẽ tạo mã duy nhất để chia sẻ với học sinh.</p>
+
+  <div class="ad-notice">
+    ⚙️ <strong style="color:white">Cấu hình Supabase:</strong> Mở file <code>admin/index.html</code>,
+    tìm phần <code>SUPABASE CONFIG</code> và điền <code>SUPABASE_URL</code> + <code>SUPABASE_ANON_KEY</code>.
+    Tạo bảng <code>lop_hoc</code> theo SQL hướng dẫn bên dưới trong code.
+  </div>
+
+  <!-- Thông tin chung -->
+  <div style="margin-bottom:28px">
+    <div class="sec-label">Thông tin chung</div>
+    <div class="af">
+      <label>Link ảnh bìa (dùng chung cho cả lớp)</label>
+      <input type="url" id="admin-cover" placeholder="https://example.com/cover.jpg">
+    </div>
+  </div>
+
+  <!-- Danh sách -->
+  <div style="margin-bottom:24px">
+    <div class="sec-label">Danh sách khách mời</div>
+    <div class="af">
+      <label>Mỗi dòng: <code style="color:#fbcfe8;font-size:12px">STT - Tên</code> hoặc <code style="color:#fbcfe8;font-size:12px">STT, Tên</code></label>
+      <textarea id="admin-guests" rows="6" placeholder="01 - Nguyễn Thị A&#10;02 - Trần Thị B&#10;03 - Lê Thị C"></textarea>
+    </div>
+    <button class="parse-btn" onclick="parseGuests()">✦ Tạo ô nhập liệu →</button>
+  </div>
+
+  <!-- Ảnh & lời chúc -->
+  <div style="margin-bottom:24px">
+    <div class="sec-label">Ảnh & lời chúc riêng</div>
+    <div class="guest-grid" id="guest-grid">
+      <p style="color:rgba(255,255,255,0.22);font-size:13px">Nhập danh sách bên trên rồi nhấn "Tạo ô nhập liệu".</p>
+    </div>
+  </div>
+
+  <button class="save-btn" onclick="saveClass()">
+    <span>💾</span><span>Lưu & Tạo mã lớp</span>
+  </button>
+
+  <div class="res-box" id="res-box">
+    <div class="res-title">✓ Tạo thành công — Mã lớp</div>
+    <div class="res-code" id="res-code">——</div>
+    <div class="res-note">Chia sẻ mã này cho học sinh để truy cập trang chúc mừng</div>
+    <button class="copy-btn" onclick="copyCode()">📋 Sao chép mã</button>
+  </div>
+</div>
+
+<script>
+// ============================================================
+//  SUPABASE CONFIG
+// ============================================================
+const SUPABASE_URL      = 'https://YOUR_PROJECT.supabase.co';
+const SUPABASE_ANON_KEY = 'YOUR_ANON_KEY';
+
+// SQL tạo bảng (chạy trong Supabase SQL Editor):
+/*
+CREATE TABLE lop_hoc (
+  id BIGSERIAL PRIMARY KEY,
+  ma_lop TEXT UNIQUE NOT NULL,
+  anh_bia TEXT,
+  users JSONB NOT NULL DEFAULT '[]',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE lop_hoc ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "read"   ON lop_hoc FOR SELECT USING (true);
+CREATE POLICY "insert" ON lop_hoc FOR INSERT WITH CHECK (true);
+CREATE POLICY "update" ON lop_hoc FOR UPDATE USING (true);
+*/
+// ============================================================
+
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let guests = [];
+
+function parseGuests() {
+  const raw = document.getElementById('admin-guests').value.trim();
+  if (!raw) return;
+  guests = raw.split('\n').filter(l => l.trim()).map(line => {
+    const m = line.match(/^(\S+)\s*[-,|]\s*(.+)$/);
+    if (m) return { stt: m[1].trim(), ten: m[2].trim() };
+    const p = line.trim().split(/\s+/);
+    return { stt: p[0], ten: p.slice(1).join(' ') };
+  }).filter(g => g.stt && g.ten);
+  renderGuests();
+}
+
+function renderGuests() {
+  const grid = document.getElementById('guest-grid');
+  grid.innerHTML = '';
+  guests.forEach((g, i) => {
+    const el = document.createElement('div');
+    el.className = 'g-row';
+    el.innerHTML = `
+      <div class="g-row-head">
+        <span class="g-stt">${g.stt}</span>
+        <span class="g-row-name">${g.ten}</span>
+      </div>
+      <input type="url"  id="gi-av-${i}" placeholder="Link ảnh đại diện (tùy chọn)">
+      <input type="text" id="gi-nm-${i}" value="${g.ten}" placeholder="Tên hiển thị">
+      <textarea          id="gi-ms-${i}" placeholder="Lời chúc riêng cho ${g.ten}..."></textarea>
+    `;
+    grid.appendChild(el);
+  });
+}
+
+async function saveClass() {
+  const cover = document.getElementById('admin-cover').value.trim();
+  if (!guests.length) { alert('Nhập danh sách và nhấn "Tạo ô nhập liệu" trước!'); return; }
+
+  const users = guests.map((g, i) => ({
+    stt:      g.stt,
+    ten:      document.getElementById(`gi-nm-${i}`)?.value.trim() || g.ten,
+    avatar:   document.getElementById(`gi-av-${i}`)?.value.trim() || '',
+    loi_chuc: document.getElementById(`gi-ms-${i}`)?.value.trim() || ''
+  }));
+
+  const maLop = genCode();
+  const { error } = await sb.from('lop_hoc').insert({ ma_lop: maLop, anh_bia: cover, users });
+
+  if (error) { alert('Lỗi: ' + error.message); return; }
+
+  document.getElementById('res-code').textContent = maLop;
+  document.getElementById('res-box').classList.add('show');
+  document.getElementById('res-box').scrollIntoView({ behavior: 'smooth' });
+}
+
+function genCode() {
+  const c = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  return Array.from({ length: 6 }, () => c[Math.floor(Math.random() * c.length)]).join('');
+}
+
+function copyCode() {
+  navigator.clipboard.writeText(document.getElementById('res-code').textContent).then(() => {
+    const b = document.querySelector('.copy-btn');
+    b.textContent = '✓ Đã sao chép!';
+    setTimeout(() => b.textContent = '📋 Sao chép mã', 2000);
+  });
+}
+</script>
+</body>
+</html>
